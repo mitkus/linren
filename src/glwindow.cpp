@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#define GL_GLEXT_PROTOTYPES
+#include "SDL_opengl.h"
+
 GLWindow::GLWindow(const char* title, size_t width, size_t height) {
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -22,11 +25,19 @@ GLWindow::GLWindow(const char* title, size_t width, size_t height) {
                                   height,
                                   SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     assert(sdl_window);
+
+    gl_context = SDL_GL_CreateContext(sdl_window);
+    assert(gl_context);
 }
 
 GLWindow::~GLWindow() {
+    SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();
+}
+
+void GLWindow::set_clear_color(float r, float g, float b) {
+    glClearColor(r, g, b, 1.0f);
 }
 
 bool GLWindow::is_open() {
@@ -52,4 +63,7 @@ bool GLWindow::is_open() {
     return open;
 }
 
-void GLWindow::present() { SDL_GL_SwapWindow(sdl_window); }
+void GLWindow::present() {
+    SDL_GL_SwapWindow(sdl_window);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}

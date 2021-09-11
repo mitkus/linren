@@ -17,6 +17,9 @@ public:
     GLWindow(const char* title, size_t width, size_t height);
     ~GLWindow();
 
+    // Use this to override default black clear color.
+    void set_clear_color(float r, float g, float b);
+
     // Returns true if window is open and rendering can proceed. Internally
     // this handles events and looks for ESC key or window being closed in any
     // other way.
@@ -27,4 +30,5 @@ public:
 
 private:
     SDL_Window* sdl_window;
+    SDL_GLContext gl_context;
 };
