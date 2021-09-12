@@ -16,7 +16,6 @@ GLWindow::GLWindow(const char* title, size_t width, size_t height) {
 
     // Set doublebuffer & depth buffer size
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     sdl_window = SDL_CreateWindow(title,
                                   SDL_WINDOWPOS_CENTERED,
@@ -45,6 +44,8 @@ void GLWindow::set_clear_color(float r, float g, float b) {
 bool GLWindow::is_open() {
     bool open = true;
 
+    // Handle OS events and quit when window is closed
+    // or ESC key pressed
     SDL_Event e;
     while(SDL_PollEvent(&e)) {
         if(e.type == SDL_QUIT) {

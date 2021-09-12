@@ -4,10 +4,11 @@
 
 LineRenderer::LineRenderer(size_t buffer_width,
                            size_t buffer_height,
-                           size_t max_lines) {
+                           size_t max_lines)
+    : max_lines(max_lines) {
+    // Load shaders
     vert_shader = load_shader("shaders/line.vert", GL_VERTEX_SHADER);
     assert(vert_shader);
-
     frag_shader = load_shader("shaders/line.frag", GL_FRAGMENT_SHADER);
     assert(frag_shader);
 
@@ -72,11 +73,17 @@ LineRenderer::LineRenderer(size_t buffer_width,
     assert(glGetError() == GL_NO_ERROR);
 }
 
-LineRenderer::~LineRenderer() {}
+LineRenderer::~LineRenderer() {
+    glDeleteProgram(program);
+    glDeleteShader(vert_shader);
+    glDeleteShader(frag_shader);
+}
 
 void LineRenderer::clear() { vertices.clear(); }
 
 void LineRenderer::add_lines(const LineDef* defs, size_t count) {
+    assert(vertices.size() + count * 6 <= max_lines * 6);
+
     for(size_t i = 0; i < count; ++i) {
         LineDef def = defs[i];
 
@@ -90,17 +97,17 @@ void LineRenderer::add_lines(const LineDef* defs, size_t count) {
 
         // Line half width expanded by one pixel to both sides to make
         // space for anti-aliasing
-        float exp_width = def.width / 2.0f + 1.0f;
+        float exp_hwidth = def.width / 2.0f + 1.0f;
 
         // Four vertices of the line represented as quad
         LineVertex v0 = {
-            def.start + normal * exp_width, def.width, exp_width, def.col};
+            def.start + normal * exp_hwidth, def.width, exp_hwidth, def.col};
         LineVertex v1 = {
-            def.end + normal * exp_width, def.width, exp_width, def.col};
+            def.end + normal * exp_hwidth, def.width, exp_hwidth, def.col};
         LineVertex v2 = {
-            def.end - normal * exp_width, def.width, -exp_width, def.col};
+            def.end - normal * exp_hwidth, def.width, -exp_hwidth, def.col};
         LineVertex v3 = {
-            def.start - normal * exp_width, def.width, -exp_width, def.col};
+            def.start - normal * exp_hwidth, def.width, -exp_hwidth, def.col};
 
         // Push six new vertices to the buffer, for two quad triangles
         // (this could be avoided with use of index buffer)

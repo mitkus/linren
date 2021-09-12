@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "color.h"
 #include "glwindow.h"
 #include "linerenderer.h"
 #include "vec2.h"
@@ -15,6 +16,8 @@ float rand_float(float min, float max) {
 }
 
 // Draws a test pattern that includes various line arrangements.
+// This uses a lot of magical numbers but ultimately is only a
+// hand-crafted test so the number have no meaning.
 void draw_line_pattern(LineRenderer* lren) {
     LineDef defs[100];
 
@@ -109,5 +112,6 @@ int main() {
         lren.render();
         window.present();
     }
+
     return 0;
 }
