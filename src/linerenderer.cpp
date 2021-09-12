@@ -11,23 +11,116 @@ LineRenderer::LineRenderer(size_t buffer_width,
     frag_shader = load_shader("shaders/line.frag", GL_FRAGMENT_SHADER);
     assert(frag_shader);
 
-    // Link shaders into a program
+    // Link shaders into a program, set vertex attributes and uniforms
     program = glCreateProgram();
     glAttachShader(program, vert_shader);
     glAttachShader(program, frag_shader);
-    // TODO: bind attrib location
+    glBindAttribLocation(program, 0, "position");
+    glBindAttribLocation(program, 1, "width");
+    glBindAttribLocation(program, 2, "dist");
+    glBindAttribLocation(program, 3, "color");
     glLinkProgram(program);
+
+    // Allocate client-side vertices buffer
+    assert(sizeof(LineVertex) == 4 * 8);
+    vertices.resize(max_lines * 6);
+    // Dummy vertex to enable us to get pointers to the attributes
+    vertices.push_back(LineVertex{});
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Set up vertex attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, sizeof(LineVertex), &vertices[0].pos);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1, 1, GL_FLOAT, GL_FALSE, sizeof(LineVertex), &vertices[0].width);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(
+        2, 1, GL_FLOAT, GL_FALSE, sizeof(LineVertex), &vertices[0].dist);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(
+        3, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), &vertices[0].col);
+    vertices.clear();
+
+    assert(glGetError() == GL_NO_ERROR);
+
+    // Validate & bind the shader programs
+    glValidateProgram(program);
+    GLint valid;
+    glGetProgramiv(program, GL_VALIDATE_STATUS, &valid);
+    if(valid != GL_TRUE) {
+        char buf[4096];
+        GLsizei length;
+        glGetProgramInfoLog(program, sizeof(buf), &length, buf);
+        printf("Unable to validate program: %s\n", buf);
+        assert(0);
+    }
     glUseProgram(program);
+    glUniform2f(glGetUniformLocation(program, "inv_screen_size"),
+                1.0f / (float)buffer_width,
+                1.0f / (float)buffer_height);
+    assert(glGetError() == GL_NO_ERROR);
+
+    // Initialize the needed GL state
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
     assert(glGetError() == GL_NO_ERROR);
 }
 
 LineRenderer::~LineRenderer() {}
 
-void LineRenderer::clear() {}
+void LineRenderer::clear() { vertices.clear(); }
 
-void LineRenderer::add_lines(const LineDef* defs, size_t count) {}
+void LineRenderer::add_lines(const LineDef* defs, size_t count) {
+    for(size_t i = 0; i < count; ++i) {
+        LineDef def = defs[i];
 
-void LineRenderer::render() {}
+        Vec2 dir = def.end - def.start;
+
+        // Skip vanishingly short lines that would be invisible anyway
+        if(dir.length_sq() < 0.001f) continue;
+
+        // Get line normal - perpendicular vector to the line
+        Vec2 normal = Vec2(dir.y, -dir.x).normalized();
+
+        // Line half width expanded by one pixel to both sides to make
+        // space for anti-aliasing
+        float exp_width = def.width / 2.0f + 1.0f;
+
+        // Four vertices of the line represented as quad
+        LineVertex v0 = {
+            def.start + normal * exp_width, def.width, exp_width, def.col};
+        LineVertex v1 = {
+            def.end + normal * exp_width, def.width, exp_width, def.col};
+        LineVertex v2 = {
+            def.end - normal * exp_width, def.width, -exp_width, def.col};
+        LineVertex v3 = {
+            def.start - normal * exp_width, def.width, -exp_width, def.col};
+
+        // Push six new vertices to the buffer, for two quad triangles
+        // (this could be avoided with use of index buffer)
+        vertices.push_back(v0);
+        vertices.push_back(v1);
+        vertices.push_back(v2);
+        vertices.push_back(v2);
+        vertices.push_back(v3);
+        vertices.push_back(v0);
+    }
+}
+
+void LineRenderer::render() {
+    if(vertices.size() > 0) {
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        assert(glGetError() == GL_NO_ERROR);
+    }
+}
+
+// Private methods
 
 GLuint LineRenderer::load_shader(const char* path, GLenum type) {
     GLenum err = GL_NO_ERROR;

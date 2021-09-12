@@ -8,11 +8,11 @@
 GLWindow::GLWindow(const char* title, size_t width, size_t height) {
     SDL_Init(SDL_INIT_VIDEO);
 
-    // Use OpenGL 2.0 profile (ES 2.0 doesn't work on macOS 11)
+    // Use OpenGL 2.1 profile (ES 2.0 doesn't work on macOS 11)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
+                        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
     // Set doublebuffer & depth buffer size
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -23,11 +23,13 @@ GLWindow::GLWindow(const char* title, size_t width, size_t height) {
                                   SDL_WINDOWPOS_CENTERED,
                                   width,
                                   height,
-                                  SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+                                  SDL_WINDOW_OPENGL);
     assert(sdl_window);
 
     gl_context = SDL_GL_CreateContext(sdl_window);
     assert(gl_context);
+
+    glViewport(0, 0, width, height);
 }
 
 GLWindow::~GLWindow() {

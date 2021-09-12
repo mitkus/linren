@@ -21,11 +21,11 @@ public:
     void set_clear_color(float r, float g, float b);
 
     // Returns true if window is open and rendering can proceed. Internally
-    // this handles events and looks for ESC key or window being closed in any
-    // other way.
+    // this handles OS events and looks for ESC key or window being closed in
+    // any other way.
     bool is_open();
 
-    // Does the GL backbuffer swap.
+    // Does the GL backbuffer swap - shows what was rendered in the window.
     void present();
 
 private:
