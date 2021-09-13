@@ -13,7 +13,8 @@ varying float v_dist;
 
 void main() {
     // Transform vertices from screen space to clip space
-    vec2 transformed_pos = (position * inv_screen_size) * 2.0 - vec2(1.0, 1.0);
+    vec2 offset_pos = position + vec2(0.5, 0.5);
+    vec2 transformed_pos = (offset_pos * inv_screen_size) * 2.0 - vec2(1.0, 1.0);
     gl_Position = vec4(transformed_pos, 1.0, 1.0);
 
     // Pass over interpolated values

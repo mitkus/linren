@@ -10,6 +10,10 @@ This renders perfectly anti-aliased lines on OpenGL ES 2.0 feature level hardwar
 
 Coverage calculation involves two per-vertex values - signed distance of fragment center from a line side (so one side is positive, one negative), and the desired width. Desired width is constant across all the line fragments and is compared to the signed distance to know which fragments are on the edge and would be only partially covered by the line.
 
+### Warning
+
+This is meant to be an example and not production-ready code. There's no error handling except some asserts sprinkled around. Almost all OpenGL state is manged in `LineRenderer` and that wouldn't work if there was any other kind drawing in the application.
+
 ## Compiling
 
 On macOS make sure SDL2 and CMake is installed
