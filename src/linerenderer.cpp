@@ -1,6 +1,7 @@
 #include "linerenderer.h"
 
 #include <string>
+#include <cassert>
 
 LineRenderer::LineRenderer(size_t buffer_width,
                            size_t buffer_height,
